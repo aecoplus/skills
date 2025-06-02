@@ -1,6 +1,7 @@
 server:
   port: 8083
-  context-path: /mysql
+  servlet:
+    context-path: /mysql
 
 spring:
   application:

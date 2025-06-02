@@ -1,8 +1,11 @@
 使用docker maven plugin插件：
 命令(打包docker镜像):
-    mvn clean -Dmaven.test.skip=true package docker:build
+    mvn clean -Dmaven.test.skip=true package docker:build (可能会报错)
+    或者用maven插件：clean -> package -> plugins:docker:build
 
 
+docker run命令:
+docker run --name docker-demo -p 8081:8081 -d docker-demo:1.0.0
 
 
 

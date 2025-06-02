@@ -1,6 +1,7 @@
 server:
   port: 8081
-  context-path: /docker
+  servlet:
+    context-path: /docker
 
 spring:
   application:
@@ -8,4 +9,4 @@ spring:
 
 logging:
   level:
-    root: debug
+    root: info
