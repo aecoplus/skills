@@ -1,0 +1,4 @@
+一、lambda
+  lambda表达式 eg new Thread(() -> {// do something}) 不是简单的语法糖替换，本质上是通过invokedynamic指令实现的
+  匿名内部类在编译的时候会创建单独的class文件，而lambda表达式却不会
+  lambda理解：我们为所需要的接口提供了一个方法作为他的实现

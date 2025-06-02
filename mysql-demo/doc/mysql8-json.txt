@@ -1,0 +1,243 @@
+// mysql8 JSON相关
+
+一. JSON函数
+
+1. JSON_EXTRACT
+SELECT JSON_EXTRACT('[1, 2, {"x": 3}]', '$[2]');
+SELECT json_extract(property, '$[0].name') FROM `table_a`;
+SELECT json_extract(property, '$[*].name') FROM `table_a`
+SELECT * FROM `table_a` where json_extract(property, '$[0].name') = '名称';
+
+
+2. JSON_UNQUOTE
+select JSON_UNQUOTE('"mochi"'); // mochi
+select JSON_UNQUOTE(cast('"mochi"' as JSON)); //mochi
+// cast
+
+
+3. JSON_KEYS
+返回一个包含了指定的 JSON 对象中最上层的成员 (key) 的数组
+JSON_KEYS(json)   JSON_KEYS(json, path)
+SELECT JSON_KEYS('{"a": 1, "b": 2, "c": 3}');              // ["a", "b", "c"]
+SELECT JSON_KEYS('[1, {"a": 1, "b": 2, "c": 3}]', '$[1]'); // ["a", "b", "c"]
+
+
+4. JSON_ARRAY
+返回一个包含了所有参数的 JSON 数组
+JSON_ARRAY(value1[, value2[, ...]])
+SELECT JSON_ARRAY(1, '1', NULL, TRUE); // [1, "1", null, true]
+SELECT JSON_ARRAY(JSON_ARRAY(1, 2), JSON_ARRAY('a', 'b')); // [[1, 2], ["a", "b"]]
+
+
+5. JSON_OBJECT
+返回一个包含了由参数指定的所有键值对的 JSON 对象
+JSON_OBJECT(key, value[, key2, value2, ...])
+SELECT JSON_OBJECT('name', 'cxian', 'age', 22); // {"age": 22, "name": "cxian"}
+SELECT JSON_OBJECT('name', 'cxian', 'age', 22, 'age', 33); // {"age": 33, "name": "cxian"}
+
+
+6. JSON_DEPTH
+返回一个 JSON 文档的最大深度
+JSON_DEPTH(json)
+SELECT
+    JSON_DEPTH('[]'),             // 1
+    JSON_DEPTH('[1, 2]'),         // 2
+    JSON_DEPTH('[1, [2, 3]]');    // 3
+
+
+7. JSON_LENGTH
+返回 JSON 文档或者 JSON 文档中通过路径指定的节点的长度
+JSON_LENGTH(json)
+JSON_LENGTH(json, path)
+纯值的长度是 1。
+数组的长度是数组元素的数量。
+对象的长度是对象成员的数量。
+内嵌的数组或对象不参与计算长度。
+SELECT
+    JSON_LENGTH('1'),        // 1
+    JSON_LENGTH('true'),     // 1
+    JSON_LENGTH('false'),    // 1
+    JSON_LENGTH('null'),     // 1
+    JSON_LENGTH('"a"');      // 1
+    JSON_LENGTH('[]'),       // 0
+    JSON_LENGTH('[1, 2]'),   // 2
+    JSON_LENGTH('[1, {"x": 2}]');    // 2
+
+
+8. JSON_CONTAINS
+函数检查一个 JSON 文档中是否包含另一个 JSON 文档
+JSON_CONTAINS(target_json, candidate_json)
+JSON_CONTAINS(target_json, candidate_json, path)
+SELECT
+    JSON_CONTAINS('[1, 2, {"x": 3}]', '1'),        // 1
+    JSON_CONTAINS('[1, 2, {"x": 3}]', '{"x": 3}'), // 1
+    JSON_CONTAINS('[1, 2, {"x": 3}]', JSON_OBJECT('x', '3')), // 1
+    JSON_OBJECT('name', '编制时间')
+    JSON_CONTAINS('[1, 2, {"x": 3}]', '3'),        // 0
+    JSON_CONTAINS('[1, 2, [3, 4]]', '2'),          // 1
+    JSON_CONTAINS('[1, 2, [3, 4]]', '2', '$[2]');  // 0
+
+
+9. JSON_ARRAY_APPEND
+向 JSON 文档中的指定的数组中追加一个值并返回修改后的 JSON 文档
+JSON_ARRAY_APPEND(json, path, value[, path2, value2] ...)
+SELECT JSON_ARRAY_APPEND('[1, 2, 3]', '$', 4);      // [1, 2, 3, 4]
+SELECT JSON_ARRAY_APPEND('[1, [2, 3]]', '$[0]', 4); // [[1, 4], [2, 3]]
+SELECT JSON_ARRAY_APPEND('[1, [2, 3]]', '$[1]', 4); // [1, [2, 3, 4]]
+SELECT JSON_ARRAY_APPEND('{"name": "Tim", "hobby": ["car"]}', '$.hobby', "food"); // {"name": "Tim", "hobby": ["car", "food"]}
+SELECT JSON_ARRAY_APPEND('1', '$', 2); // [1, 2]
+
+
+10. JSON_ARRAY_INSERT
+向 JSON 文档中的指定的数组中的指定位置插入一个值并返回新的 JSON 文档
+JSON_ARRAY_INSERT(json, path, value[, path2, value2] ...)
+set @str = '[1, [2, 3], {"a": [4, 5]}]'
+SELECT
+  JSON_ARRAY_INSERT(@str, '$[0]', 0), // [0, 1, [2, 3], {"a": [4, 5]}]
+  JSON_ARRAY_INSERT(@str, '$[1]', 0), // [1, 0, [2, 3], {"a": [4, 5]}]
+  JSON_ARRAY_INSERT(@str, '$[2]', 0), // [1, [2, 3], 0, {"a": [4, 5]}]
+  JSON_ARRAY_INSERT(@str, '$[1][0]', 0), // [1, [0, 2, 3], {"a": [4, 5]}]
+  JSON_ARRAY_INSERT(@str, '$[2].a[0]', 0); // [1, [2, 3], {"a": [0, 4, 5]}]
+
+
+11. JSON_CONTAINS_PATH
+检查一个 JSON 文档中在指定的路径上是否有值存在
+JSON_CONTAINS_PATH(json, one_or_all, path[, path])
+SELECT
+    JSON_CONTAINS_PATH('[1, 2, {"x": 3}]', 'all', '$[0]'), // 1
+    JSON_CONTAINS_PATH('[1, 2, {"x": 3}]', 'all', '$[3]'), // 0
+    JSON_CONTAINS_PATH('[1, 2, {"x": 3}]', 'all', '$[2].x'), // 1
+    JSON_CONTAINS_PATH('[1, 2, {"x": 3}]', 'one', '$[0]', '$[3]'), // 1
+    JSON_CONTAINS_PATH('[1, 2, {"x": 3}]', 'all', '$[0]', '$[3]'); // 0
+
+
+12. JSON_INSERT
+向一个 JSON 文档中插入数据并返回新的 JSON 文档
+JSON_INSERT(json, path, value[, path2, value2] ...)
+SET @arr = '[1, [2, 3], {"a": [4, 5]}]';
+SELECT JSON_INSERT(@arr, '$[0]', 0, '$[3]', 6); // [1, [2, 3], {"a": [4, 5]}, 6]
+SET @obj = '{"x": 1}';
+SELECT JSON_INSERT(@obj, '$.y', '2');           // {"x": 1, "y": "2"}
+
+
+13. JSON_MERGE
+合并两个或多个 JSON 文档并返回合并的结果
+JSON_MERGE(json1, json2, ...)
+SELECT JSON_MERGE('1', 'true', '"hello"', 'null'); // [1, true, "hello", null]
+SELECT JSON_MERGE('[1, 2]', '[2, 3]');             // [1, 2, 2, 3]
+SELECT JSON_MERGE('{"x": 1}', '{"x": 2, "y": 3}'); // {"x": [1, 2], "y": 3}
+SELECT JSON_MERGE('{"x": 1}', '[1, 2]');           // [{"x": 1}, 1, 2]
+
+
+14. JSON_MERGE_PATCH
+对两个或多个 JSON 文档执行替换合并并返回合并的结果
+JSON_MERGE_PATCH(json1, json2, ...)
+SELECT
+    JSON_MERGE_PATCH('2', 'true'),    // true
+    JSON_MERGE_PATCH('[1, 2]', '[2, 3]'),    // [2, 3]
+	JSON_MERGE_PATCH('{"x": 1, "z": 7}', '{"x": 2, "y": 3}'), // {"x": 2, "y": 3, "z": 7}
+	JSON_MERGE_PATCH('{"x": 1, "z": 7}', '{"x": 2, "z": null}'); // {"x": 2}
+
+
+15. JSON_MERGE_PRESERVE
+合并两个或多个 JSON 文档并返回合并的结果
+JSON_MERGE_PRESERVE(json1, json2, ...)
+SELECT
+    JSON_MERGE_PRESERVE('2', 'true'), // [2, true]
+    JSON_MERGE_PRESERVE('[1, 2]', '[2, 3]'), // [1, 2, 2, 3]
+	JSON_MERGE_PRESERVE('{"x": 1, "z": 7}', '{"x": 2, "y": 3}'), // {"x": [1, 2], "y": 3, "z": 7}
+	JSON_MERGE_PRESERVE('{"x": 1, "z": 7}', '{"x": 2, "z": null}'); // {"x": [1, 2], "z": [7, null]}
+
+
+16. JSON_OVERLAPS
+检测两个 JSON 文档是否拥有任何一个相同键值对或数组元素
+JSON_OVERLAPS(json1, json2)
+SELECT
+	JSON_OVERLAPS('[1, 2, 3]', '[3, 4, 5]'),	    // 1
+	JSON_OVERLAPS('[1, 2, [3]]', '[3, 4, 5]'),	    // 0
+    JSON_OVERLAPS('{"x": 1}', '{"x": 1, "y": 2}'),	// 1
+    JSON_OVERLAPS('{"x": 1}', '{"y": 2}'),	        // 0
+    JSON_OVERLAPS('[1, 2, 3]', '3'),	            // 1
+    JSON_OVERLAPS('[1, 2, [3]]', '3');	            // 0
+
+
+17. JSON_PRETTY
+格式化输出一个 JSON 文档
+JSON_PRETTY(json)
+
+
+18. JSON_REMOVE
+从一个 JSON 文档中删除由路径指定的数据并返回修改后的 JSON 文档。
+JSON_REMOVE(json, path[, path] ...)
+SELECT
+	JSON_REMOVE('[0, 1, 2, [3, 4]]', '$[0]', '$[2]'),	// [1, 2]
+	JSON_REMOVE('{"x": 1, "y": 2}', '$.x');				// {"y": 2}
+
+
+19. JSON_REPLACE
+在一个 JSON 文档中替换已存在的数据并返回新的 JSON 文档。
+JSON_REPLACE(json, path, value[, path2, value2] ...)
+SET @arr = '[1, [2, 3]]';
+SELECT
+	JSON_REPLACE(@arr, '$[0]', 0, '$[2]', 6),    // [0, [2, 3]]
+	JSON_REPLACE(@arr, '$[0]', 0, '$[1]', 6);    // [0, 6]
+
+SET @obj = '{"x": 1}';
+SELECT
+    JSON_REPLACE(@obj, '$.x', 'true', '$.y', 'true');   // {"x": "true"}
+	JSON_REPLACE(@obj, '$.x', '[1, 2]'),                // {"x": "[1, 2]"}
+	JSON_REPLACE(@obj, '$.x', JSON_ARRAY(1,2));         // {"x": [1, 2]}
+
+
+20. JSON_SET
+在一个 JSON 文档中插入或更新数据并返回新的 JSON 文档。它相当于是 JSON_INSERT() 和 JSON_REPLACE() 的组合。
+JSON_SET(json, path, value[, path2, value2] ...)
+SET @obj = '{"x": 1}';
+SELECT
+	JSON_SET(@obj, '$.x', '10', '$.y', '[1, 2]'),    // {"x": "10", "y": "[1, 2]"}
+	JSON_SET(@obj, '$.x', '10', '$.y', '{"z": 2}'),  // {"x": "10", "y": "{\"z\": 2}"}
+	JSON_SET(@obj, '$.x', '10', '$.y', CAST('[1, 2]' AS JSON)); // {"x": "10", "y": [1, 2]}
+
+
+
+二. JSON索引
+给JSON类型字段加索引:
+1、创建一个普通的BTREE索引，该索引可以覆盖所有的JSON字段，例如：
+    CREATE INDEX idx_name ON table_name(column_name);
+2、如果需要索引特定的JSON对象键或值，则可以使用虚拟列和生成的列来实现，例如：
+    ALTER TABLE table_name
+    ADD COLUMN key_name VARCHAR(64)
+        GENERATED ALWAYS AS (json_extract(column_name, '$.key_name')) VIRTUAL,
+    ADD COLUMN value_name VARCHAR(64)
+        GENERATED ALWAYS AS (json_extract(column_name, '$.key_name.value_name')) VIRTUAL,
+    ADD INDEX idx_key_name (key_name),
+    ADD INDEX idx_value_name (value_name);
+在这个例子中，我们创建了两个新列 key_name 和 value_name，并为它们各自创建了一个索引。你可以根据你的需求来选择需要索引的 JSON 对象键或值。
+3、为 JSON 数组中的值创建索引：
+如果JSON列包含数组，则不能使用虚拟列来创建索引，而应该使用 JSON_TABLE 函数。例如：
+CREATE INDEX idx_array_value ON table_name (
+    (SELECT value FROM JSON_TABLE(column_name, '$[*]' COLUMNS (value INT PATH '$')))
+);
+在这个例子中，我们使用 JSON_TABLE 函数将 JSON 数组解析为一个表格数据，并从中选择值（value）。然后，我们在这个值上创建了一个普通的BTREE索引。
+
+
+
+
+三、函数
+3.1 FIND_IN_SET 有则返回下标位置，没有返回0
+
+    SELECT FIND_IN_SET('b', 'a,b,c,d'); //结果为2
+
+
+3.2
+
+
+
+
+
+
+
+
+
+
+

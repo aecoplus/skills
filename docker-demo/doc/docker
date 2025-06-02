@@ -1,0 +1,9 @@
+使用docker maven plugin插件：
+命令(打包docker镜像):
+    mvn clean -Dmaven.test.skip=true package docker:build
+
+
+
+
+
+

@@ -1,0 +1,19 @@
+一. 密封类型
+1. 语法:
+  public sealed [abstract] [class/interface] className [extends 父类] [implements 接口,...] permits [子类,...] {}
+  eg.
+    public sealed class Shape permits Circle, Triangle {}
+    在class关键字前添加sealed关键字 表示此类为密封类型; permits后面跟上允许继承的类 多个子类使用逗号隔开
+
+2. 密封类型的约束:
+  2.1 可以基于普通类、抽象类、接口, 也可以是继承自其他抽象类的子类 或是 实现其他接口的类
+  2.2 必须有子类继承 且不能是匿名内部类或是lambda的形式
+  2.3 sealed关键字写在原来final的位置 不能和final non-sealed关键字同时出现
+  2.4 子类必须显示的标记为final、sealed 或是 non-sealed类型
+
+3. 子类格式:
+  public [final/sealed/non-sealed] class 子类 extends 父类 {
+    // final类型: 任何类不能再继承当前类 到此为止 类已经封死
+    // sealed类型: 同父类 需要指定有哪些类继承
+    // non-sealed类型: 重新开放为普通类 任何类都可以继承
+  }

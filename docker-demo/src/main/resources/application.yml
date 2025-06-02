@@ -1,0 +1,11 @@
+server:
+  port: 8081
+  context-path: /docker
+
+spring:
+  application:
+    name: docker-demo
+
+logging:
+  level:
+    root: debug

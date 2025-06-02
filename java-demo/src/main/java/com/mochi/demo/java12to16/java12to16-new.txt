@@ -1,0 +1,28 @@
+一. 新的switch语法(java14)
+switch(a){
+  case "1", "2" -> "A";
+  case "3", "4" -> "B";
+  default -> {
+    yield "default";
+  }
+}
+
+二. 文本块(java13)
+  String str = """
+              此处可以写文本块
+              无需使用\n来换行
+              """;
+
+
+三. 新的instanceof语法
+  if (obj instanceof InstanceofDemo demo) {
+      return this.name.equals(demo.name);
+  }
+
+四. 空指针异常的改进
+ 报错时提示更清晰 能知道哪个变量是空指针
+
+五. 记录类型
+
+
+

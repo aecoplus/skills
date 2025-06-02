@@ -1,0 +1,16 @@
+server:
+  port: 8083
+  context-path: /mysql
+
+spring:
+  application:
+    name: mysql-demo
+  datasource:
+    url: jdbc:mysql://localhost:13306/yummy_mochi?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
+    username: root
+    password: t3Q8t5KWYJCCpJw
+    main:
+      allow-bean-definition-overriding: true
+    cache:
+      type: simple
+

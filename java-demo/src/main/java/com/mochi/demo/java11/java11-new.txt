@@ -1,0 +1,8 @@
+一. 用于Lambda的形参局部变量语法
+Consumer<String> consumer = (var str) -> {};
+
+二. 针对String类的方法增强
+
+
+三. 全新的HttpClient (java9)
+

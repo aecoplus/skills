@@ -1,0 +1,11 @@
+#dockerfile
+FROM jdk:17-slim
+
+WORKERDIR /app/jiangxl
+
+ADD app.jar app.jar
+
+EXPOSE 7777
+
+CMD ["java", "-jar", "app.jar", "--spring.profiles.active=prod", "--server.port=7777"]
+

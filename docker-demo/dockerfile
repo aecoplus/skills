@@ -1,0 +1,12 @@
+#dockerfile
+FROM openjdk:17-slim
+
+WORKDIR /app/jiangxl
+
+ARG JAR_FILE
+ADD ${JAR_FILE} app.jar
+
+EXPOSE 7777
+
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod", "--server.port=7777"]
+

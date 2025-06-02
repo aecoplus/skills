@@ -1,0 +1,168 @@
+一、
+1. 解析顺序、执行顺序
+	标准的 SQL 的解析顺序为:
+	　　(1) FROM 子句 组装来自不同数据源的数据
+	　　(2) WHERE 子句 基于指定的条件对记录进行筛选
+	　　(3) GROUP BY 子句 将数据划分为多个分组
+	　　(4) 使用聚合函数进行计算
+	　　(5) 使用HAVING子句筛选分组
+	　　(6) 计算所有的表达式
+	　　(7) 使用ORDER BY对结果集进行排序
+	执行顺序
+	　　1. FROM：对FROM子句中前两个表执行笛卡尔积生成虚拟表vt1 (virtual table)
+	　　2. ON: 对vt1表应用ON筛选器只有满足 join_condition 为真的行才被插入vt2
+	　　3. OUTER(join)：如果指定了 OUTER JOIN保留表(preserved table)中未找到的行将行作为外部行添加到vt2，生成t3，
+				 如果from包含两个以上表，则对上一个联结生成的结果表和下一个表重复执行步骤和步骤直接结束。
+	　　4. WHERE：对vt3应用 WHERE 筛选器只有使 where_condition 为true的行才被插入vt4
+	　　5. GROUP BY：按GROUP BY子句中的列列表对vt4中的行分组生成vt5
+	　　6. CUBE|ROLLUP：把超组(supergroups)插入vt6，生成vt6
+	　　7. HAVING：对vt6应用HAVING筛选器只有使 having_condition 为true的组才插入vt7
+	　　8. SELECT：处理select列表产生vt8
+	　　9. DISTINCT：将重复的行从vt8中去除产生vt9
+	　　10. ORDER BY：将vt9的行按order by子句中的列列表排序生成一个游标vc10
+
+
+2.连接 join
+	交叉连接cross join，
+	内连接 [inner] join，从结果表中删除与其他被连接表中没有匹配行的所有行，所以内连接可能会丢失信息
+	外连接 left join/ right join，
+	自连接 table1 join table1
+
+     0.自连接可以解决局部不一致问题
+     1.自连接经常和非等值连接结合起来使用。
+     2.自连接和GROUP BY结合使用可以生成递归集合。
+     3.将自连接看作不同表之间的连接更容易理解。
+     4.应把表看作行的集合，用面向集合的方法来思考。
+     5.自连接的性能开销更大，应尽量给用于连接的列建立索引
+
+3. 联合 union
+	联合 () union [all]()(order by) , union不会出现重复的行，union all会出现重复的行
+
+
+4. group by中
+    WHERE子句用来调查集合元素的性质，而HAVING子句用来调查集合本身的性质
+
+5. 不允许子查询读数据的同时删除或更新相同的表
+
+
+5. GROUP  BY子句里
+    使用CASE表达式，可以灵活地选择作为聚合的单位的编号或等级。
+    在聚合函数中使用CASE表达式，可以将行结构的数据转换成列结构的数据。
+ 
+
+6. 三值逻辑：true false unknown
+ 对NULL使用比较谓词后得到的结果总是unknown
+ 1. NULL不是值。
+ 2.因为NULL不是值，所以不能对其使用谓词
+ 3.对NULL使用谓词后的结果是unknown。
+ 4. unknown参与到逻辑运算时，SQL的运行会和预想的不一样。
+
+
+7. 限定谓词：all any=in
+ ALL谓词其实是多个以AND连接的逻辑表达式的省略写法
+ 限定谓词和极值函数不是等价的
+ 极值函数在统计时会把为NULL的数据排除掉
+ 极值函数在输入为空表（空集）时会返回NULL
+
+8. ??
+ 1.表不是文件，记录也没有顺序，所以SQL不进行排序。
+ 2. SQL不是面向过程语言，没有循环、条件分支、赋值操作。
+ 3. SQL通过不断生成子集来求得目标集合。
+ 		SQL不像面向过程语言那样通过画流程图来思考问题，而是通过画集合的关系图来思考。
+ 4. GROUP BY子句可以用来生成子集。
+ 5. WHERE子句用来调查集合元素的性质，而HAVING子句用来调查集合本身的性质
+  
+
+9. text类型索引
+ text类型不允许有default值，而且不填补，通过多少个字节建立索引(InnoDB)
+ MyISAM可以对text建立索引
+ 
+10. foreign key 外键
+ 前提：
+  所有表innoDB；
+  用于外键关系的字段必须在所有参照表中进行明确的索引，index(fk_department);
+  foreign key (masterid) references person(id)
+  
+11. exists
+ exists可以用来检查一个子查询是否产生了结果（EXISTS用于检查子查询是否至少会返回一行数据）
+ 这使得可以只在exists检测为真时才执行外部的查询
+ 子查询使用外部查询的一个字段称为外部参照。
+ 相应的子查询称为相关子查询，因为他与包含在他之内的一个或者多个查询的结果集相关
+ 
+ IN适合于外表大而内表小的情况；EXISTS适合于外表小而内表大的情况。
+ 
+ 不允许子查询读数据的同时删除或更新相同的表
+ 
+ on 与 where 与having 的区别：
+ on最先执行，生成临时表，再是where，最后having；
+ on条件是在生成临时表时使用的条件，它不管on中的条件是否为真，都会返回左边表中的记录，反映一方中的全连接
+ 而inner join没这个特殊性，则条件放在on中和where中，返回的结果集是相同的
+ 
+ 中文排序：ORDER BY CONVERT(NAME USING gbk)
+
+12.  InnoDB，MyISAM
+ InnoDB支持事务，MyISAM不支持 
+ InnoDB支持外键，而MyISAM不支持
+ Innodb不支持全文索引，而MyISAM支持全文索引，查询效率上MyISAM要高
+ InnoDB不保存表的具体行数;MyISAM用一个变量保存了整个表的行数
+
+ show create table table_name
+ alter table table_name engine=engine_name
+
+13. 索引index
+ 索引：在经常需要搜索的列，主键列，连接列，经常需要排序的列，根据范围进行搜索的列
+ 建立索引，一般按照select的where条件来建立
+ 1.CREATE  INDEX  index_name  ON  table_name (column(length))
+ 2.ALTER TABLE table_name ADD INDEX index_name (column(length))
+ 3.CREATE TABLE table_name (id int not null auto_increment,title varchar(30) 
+ 													,PRIMARY KEY(id) , INDEX  index_name (title(5)))
+ SHOW  INDEX  FROM  [table_name]
+ 1.DROP INDEX  index_name  ON talbe_name
+ 2.ALTER TABLE  table_name  DROP INDEX  index_name
+ 唯一索引：CREATE UNIQUE INDEX index_name  ON table_name (column(length))
+ 使用短索引
+ 模糊查询，like "%aaa%" 不会使用索引，而like "aaa%"可以使用索引
+
+ 
+ 显示username的前两个字符，索引从1开始
+    left()函数
+    SELECT SUBSTR(username FROM 1 FOR 2) from t_user;
+ 显示user_name的后三个字符
+    right()函数
+    SELECT substr(username, LENGTH(username)-2) from t_user;
+ 
+ limit的索引从0开始
+ 
+ 
+ 
+二、SQL进阶
+*case表达式(短路)
+ *简单case表达式
+ *搜索case表达式
+ Attention：类型，end ，else
+ *将已有编号转换为新的统计方式
+ *一条SQL语句进行不同条件的统计
+ *check约束,mysql中，check作为表级约束
+ *update里条件分支（eg. 主键或唯一键调换）
+ *表之间的数据匹配
+ *case中的聚合函数
+
+ having语句求众数
+  
+
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
